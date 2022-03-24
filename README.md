@@ -1,6 +1,7 @@
 # Esurfing Client For Shell
 广东天翼校园第三方shell脚本
 
+---
 ## 脚本说明
 
 - 使用shell轻量脚本，兼容大部分系统，弥补了天翼无法在linux上使用的缺陷
