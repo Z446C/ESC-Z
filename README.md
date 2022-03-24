@@ -70,7 +70,7 @@ mac="62:37:E9:BD:F1:C5"
 clientip=""
 # 【建议填写】学校代号,建议手动填写，节省访问资源（wyu默认1414），例如
 schoolid="1414"
-# 日志路径、文件大小（字节）
+# 日志路径、文件大小（kB）
 path="/root/ESC-Z/ESC-Z.log"
 logmaxsize=256
 ```
