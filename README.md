@@ -80,7 +80,7 @@ logmaxsize=256
 ```shell
 crontab -e
 ```
-2. 填入一下内容，表示每隔1分钟执行一次脚本（可以在[Cron在线表达式生成器](http://cron.ciding.cc/)s生成）
+2. 填入一下内容，表示每隔1分钟执行一次脚本（可以在[Cron在线表达式生成器](http://cron.ciding.cc/)生成）
 ```
 */1 * * * * /bin/sh /root/ESC-Z/ESC-Z.sh login
 ```
