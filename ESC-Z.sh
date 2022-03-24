@@ -279,11 +279,11 @@ login(){
 			getIP $urllocation
 			echo "nasip:$nasip" >> $path
 			echo "clientip:$clientip" >> $path
-			echo "MAC:$mac" >> $path
 			
 			# 获取MAC地址
 			getMAC
-
+			echo "MAC:$mac" >> $path
+			
 			# 获取学校ID
 			if [[ "$schoolid" == "" ]]; then
 				schoolid=`getSchoolId`
