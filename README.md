@@ -109,13 +109,13 @@ reboot
 ```shell
 # 编辑crontab文件内容
 # 每天从6:00到22:55，每隔5分钟执行一次
-0 0/5 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * * /bin/sh /root/ESC-Z/ESC-Z.sh login
+*/5 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * * /bin/sh /root/ESC-Z/ESC-Z.sh login
 # 周五周六0:00到5:55，每隔5分钟执行一次
-0 0/5 0,1,2,3,4,5 * * 5-6 /bin/sh /root/ESC-Z/ESC-Z.sh login
+*/5 0,1,2,3,4,5 * * 5-6 /bin/sh /root/ESC-Z/ESC-Z.sh login
 # 每天23:00至23:30，每隔5分钟执行一次
-0 0,5,10,15,20,25,30 23 * * * /bin/sh /root/ESC-Z/ESC-Z.sh login
+0,5,10,15,20,25,30 23 * * * /bin/sh /root/ESC-Z/ESC-Z.sh login
 # 周五周六23:35至23:55，每隔5分钟执行一次
-0 35,40,45,50,55 23 * * 5-6 /bin/sh /root/ESC-Z/ESC-Z.sh login
+35,40,45,50,55 23 * * 5-6 /bin/sh /root/ESC-Z/ESC-Z.sh login
 ```
 
 ### linux知识补充
