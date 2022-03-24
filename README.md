@@ -1,7 +1,6 @@
 # Esurfing Client For Shell
 广东天翼校园第三方shell脚本
 
----
 ## 脚本说明
 
 - 使用shell轻量脚本，兼容大部分系统，弥补了天翼无法在linux上使用的缺陷
@@ -74,7 +73,7 @@ schoolid=""
 path="/root/ESC-Z/ESC-Z.log"
 logmaxsize=256
 ```
-1. 拷贝项目到/root，确认脚本所在位置为/root/ESC-Z/ESC-Z.sh
+2. 拷贝项目到/root，确认脚本所在位置为/root/ESC-Z/ESC-Z.sh
 
 ### 执行脚本
 1. 给权限，直接运行，会在/root/ESC-Z生成一个日志文件ESC-Z.log
