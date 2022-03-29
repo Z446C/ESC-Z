@@ -16,8 +16,6 @@ pwd64=""
 nasip=""
 # 【建议填写】WAN口MAC地址(注意自动获取MAC的函数里的指令是否能成功获取到，若不能请手动填写)
 mac=""
-# 用户ip地址，会动态变化，留空
-clientip=""
 # 【建议填写】学校代号,建议手动填写，节省访问资源，wyu默认1414
 schoolid=""
 # 日志路径、文件大小
@@ -31,6 +29,7 @@ version="214"
 useragent="User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
 cookie=""
 verifycode=""
+clientip=""
 time=`date "+%Y-%m-%d %H:%M:%S"`
 #################################################################################################################
 # 创建日志文件
@@ -43,8 +42,14 @@ createLog(){
 		local size=`ls -l $path | awk '{ print $5 }'`
 		local maxsize=$((1024*$logmaxsize))
 		if [ $size -ge $maxsize ]; then
-			cat /dev/null > $path
-			echo "$time - 状态:正在清空日志..." >> $path
+			echo "$time - 状态:正在删除旧的记录..." >> $path
+			#取后3000行内容重定向到另外一个临时文件中
+			tail -n 3000 ESC-Z.log > ESC-Z.log.tmp
+			rm -f ESC-Z.log
+			mv ESC-Z.log.tmp ESC-Z.log
+			# 清空
+			# cat /dev/null > $path
+			# echo "$time - 状态:正在清空日志..." >> $path
 		else
 			echo "$time - 状态:日志容量 $size/$maxsize" >> $path
 		fi
@@ -279,11 +284,11 @@ login(){
 			getIP $urllocation
 			echo "nasip:$nasip" >> $path
 			echo "clientip:$clientip" >> $path
+			echo "MAC:$mac" >> $path
 			
 			# 获取MAC地址
 			getMAC
-			echo "MAC:$mac" >> $path
-			
+
 			# 获取学校ID
 			if [[ "$schoolid" == "" ]]; then
 				schoolid=`getSchoolId`
