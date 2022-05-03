@@ -85,6 +85,7 @@ service cron start
 service cron status
 ```
 **到此为止，脚本会每分钟执行一次**
+
 4. 注销（xxx:xxx:xxx:xxx是用户IP，建议自行实现获取本地网口ip，就不用带参数了）
 ```shell
 /root/ESC-Z/ESC-Z.sh logout xxx:xxx:xxx:xxx
