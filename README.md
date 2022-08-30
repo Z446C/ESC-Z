@@ -86,9 +86,9 @@ service cron start
 service cron status
 ```
 **到此为止，脚本会每分钟执行一次**
-4. 注销（xxx:xxx:xxx:xxx是用户IP，建议自行实现获取本地网口ip，就不用带参数了）
+4. 注销 (1.0.2以上版本会自动获取ip)
 ```shell
-/root/ESC-Z/ESC-Z.sh logout xxx:xxx:xxx:xxx
+/root/ESC-Z/ESC-Z.sh logout
 ```
 
 ### 使用的建议
@@ -117,7 +117,6 @@ reboot
 - [ ] 提高脚本兼容性
 
 ## 参考项目
-
 致谢大佬们的项目
 - https://github.com/OJZen/FckESC
 - https://github.com/hzwjm/iNot-eclient
@@ -126,12 +125,10 @@ reboot
 
 
 ## 开源协议
-
 [GPL-3.0](https://github.com/Z446C/ESC-Z/blob/main/LICENSE)
 
 
 ## 声明
-
 严格遵守GPL-3.0开源协议，禁止任何个人或者公司将本代码投入商业使用，由此造成的后果和法律责任均与本人无关。
 本项目只适用于学习交流，请勿商用！
 
