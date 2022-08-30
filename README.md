@@ -86,6 +86,7 @@ service cron start
 service cron status
 ```
 **到此为止，脚本会每分钟执行一次**
+
 4. 注销 (1.0.2以上版本会自动获取ip)
 ```shell
 /root/ESC-Z/ESC-Z.sh logout
