@@ -1,6 +1,9 @@
 #!/bin/sh
 #####################################################################################################################
 # 作者 @Otm-Z 创建于2022/03/22
+# 版本：1.0.2
+# 更新时间：2022/08/30
+# 更新内容：解决获取响应数据时结尾出现\r\n控制符导致字符串匹配失败的问题；自动获取mac地址;自动获取本地IP；增加用户自定义函数
 # 实现环境：openwrt
 # 必备工具包：curl
 # 非必备工具包：coreutils-base64 —— 用于密码编码，可以不安装，自行去编码，再把结果填入pwd64中，默认留空自动编码（需安装工具包）
@@ -8,17 +11,17 @@
 # 必填数据：账号、密码
 username=""
 passwd=""
+# device通过`ifconfig`查看,名称就是最左侧
+device="wan"  # 用于自动获取本地ip
 ################################
-# 选填数据（保持默认或留空自动获取，最好填写【建议填写】的，一劳永逸）
-# 【建议填写】base64编码过的密码（建议自行编码，节省内存）
+# 建议填写，一劳永逸
+# base64编码过的密码（建议自行编码，节省内存）
 pwd64=""
-# 【建议填写】学校服务器，登录后查看日志，将nasip填入下面，否则会影响注销（wyu默认119.146.175.80）
+# 学校服务器，登录后查看日志，将nasip填入下面，否则会影响注销（wyu默认填119.146.175.80）
 nasip=""
-# 【建议填写】WAN口MAC地址(注意自动获取MAC的函数里的指令是否能成功获取到，若不能请手动填写)
-mac=""
-# 【建议填写】学校代号,建议手动填写，节省访问资源，wyu默认1414
+# 学校代号,建议手动填写，节省访问资源（wyu默认填1414）
 schoolid=""
-# 日志路径、文件大小
+# 日志路径、日志文件大小(kB)
 path="/root/ESC-Z/ESC-Z.log"
 logmaxsize=256
 ################################
@@ -29,9 +32,27 @@ version="214"
 useragent="User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
 cookie=""
 verifycode=""
-clientip=""
 time=`date "+%Y-%m-%d %H:%M:%S"`
+mac=""
+clientip=""
+redirecturl1="172.17.18.3:8080"
+redirecturl2="enet.10000.gd.cn:10001"
 #################################################################################################################
+# 自定义函数体(用于用户自定义脚本，通过参数来调用)例如：./ESC-MWAN.sh myFunc test
+myFunc(){
+	case $1 in
+		test)
+			echo "HELLO ESC-MWAN!"
+			;;
+		start)
+			;;
+		stop)
+			;;
+		restart)
+			;;
+	esac
+}
+
 # 创建日志文件
 createLog(){
 	if [[ "$path" == "" ]]; then
@@ -43,7 +64,7 @@ createLog(){
 		local maxsize=$((1024*$logmaxsize))
 		if [ $size -ge $maxsize ]; then
 			echo "$time - 状态:正在删除旧的记录..." >> $path
-			#取后3000行内容重定向到另外一个临时文件中
+			#只保留取后3000行内容
 			tail -n 3000 ESC-Z.log > ESC-Z.log.tmp
 			rm -f ESC-Z.log
 			mv ESC-Z.log.tmp ESC-Z.log
@@ -86,40 +107,41 @@ getIP(){
 	fi
 
 	if [[ "$clientip" == "" ]]; then
-	        clientip=`echo -n $tmp2 | cut -d '=' -f2`
+	        clientip=`echo -n $tmp2 | cut -d '=' -f2 | tr -d '\r' | tr -d '\n'`
 	else
-	        clientip=`echo -n $tmp1 | cut -d '=' -f2`
+	        clientip=`echo -n $tmp1 | cut -d '=' -f2 | tr -d '\r' | tr -d '\n'`
 	fi
 
 	if [[ "$nasip" == "" ]]; then
-	        nasip=`echo -n $tmp1 | cut -d '=' -f2`
+	        nasip=`echo -n $tmp1 | cut -d '=' -f2 | tr -d '\r' | tr -d '\n'`
 	else
-	        nasip=`echo -n $tmp2 | cut -d '=' -f2`
+	        nasip=`echo -n $tmp2 | cut -d '=' -f2 | tr -d '\r' | tr -d '\n'`
 	fi
 }
 
 #获取MAC地址
 getMAC(){
-	if [[ "$mac" == "" ]]; then
-		# 两种指令:ip和ifconfig
-		# mac=`ifconfig |grep -B1 $clientip |awk '/HWaddr/ { print $5 }'`
-		mac=`ip addr |grep -B1 $clientip |grep link |awk '{print $2}'`
-	fi
+	mac=`ifconfig |grep -B1 $clientip |awk '/HWaddr/ { print $5 }'`
+}
+
+# 获取本地IP地址
+getLocalIP(){
+	clientip=`ifconfig $device |grep "inet addr" |awk '{print $2}' |tr -d "addr:"`
 }
 
 # 网站访问状态 (getUrlStatus url location/code)
 getUrlStatus(){
 	if [[ "$2" == "location" ]]; then
 		#获取重定向地址
-		echo `curl $1 -H "$useragent" -I -G -s | grep "Location" | awk '{print $2}'`
+		echo `curl $1 -H "$useragent" -I -G -s | grep "Location" | awk '{print $2}' | tr -d '\r' | tr -d '\n'`
 	elif [[ "$2" == "code" ]]; then
 		#获取状态码
-		echo `curl $1 -H "$useragent" -I -G -s | grep "HTTP" | awk '{print $2}'`
+		echo `curl $1 -H "$useragent" -I -G -s | grep "HTTP" | awk '{print $2}' | tr -d '\r' | tr -d '\n'`
 	fi
 }
 
 # 保活
-keepAlive(){
+networkCheck(){
 	local url1="http://qq.com"
 	local url2="http://www.bing.com"
 	Location=`getUrlStatus $url1 location`
@@ -247,13 +269,15 @@ logoutTask(){
 #登录逻辑
 login(){
 	echo "$time - 状态:登录中..." >> $path
-	# 保活检测
-	local alivestatus=`keepAlive`
-	if [[ "$alivestatus" == "OK" ]]; then
-		echo "网络正常，开始冲浪！" >> $path
+
+	# 网络检测，若可以连接外网则退出
+	local networkStatus=`networkCheck`
+	if [[ "$networkStatus" == "OK" ]]; then
+		echo "网络正常！"
+		echo "网络正常！" >> $path
 		return
 	fi
-	# 检查网络状态
+	# 开始登陆
 	local url="http://www.qq.com/"
 	local urlcode=`getUrlStatus $url code`
 	local urllocation=`getUrlStatus $url location`
@@ -263,8 +287,8 @@ login(){
 	elif [[ "$urlcode" == "302" ]]; then
 		# 获取重定向地址
 		echo "当前为有线网络" >> $path
-		
-		if [[ $urllocation = "http://172.17.18.3:8080/portal/"* ]]; then
+		echo "获取到重定向地址为:$urllocation" >> $path
+		if [[ $urllocation =~ $redirecturl1 ]]; then
 			# 需要protal认证
 			# http://172.17.18.3:8080/portal/templatePage/20200426133232935/login_custom.jsp
 			echo "检测到需要portal服务认证" >> $path
@@ -276,17 +300,23 @@ login(){
 				echo "portal服务认证失败, 请检查网络" >> $path
 			fi
 			return
-		elif [[ $urllocation = "http://enet.10000.gd.cn:10001/"* ]]; then
+		elif [[ $urllocation =~ $redirecturl2 ]]; then
+			# 已登录portal
 			# "http://enet.10000.gd.cn:10001/?wlanuserip=100.2.49.240&wlanacip=119.146.175.80"
 			# "http://enet.10000.gd.cn:10001/qs/main.jsp?wlanacip=119.146.175.80&wlanuserip=100.2.50.69"
+
 			# 获取用户IP和服务器IP
-			echo "获取到重定向地址为:$urllocation" >> $path
 			getIP $urllocation
 			echo "nasip:$nasip" >> $path
 			echo "clientip:$clientip" >> $path
-			
+
 			# 获取MAC地址
-			getMAC
+			if [ $clientip ]; then
+				getMAC
+			else
+				getLocalIP
+				getMAC
+			fi
 			echo "MAC:$mac" >> $path
 
 			# 获取学校ID
@@ -316,10 +346,11 @@ login(){
 			fi
 
 		else
-			echo "获取重定向地址失败" >> $path
+			echo "获取重定向地址失败，获取的重定向地址不是http://172.17.18.3:8080/和http://enet.10000.gd.cn:10001/" >> $path
 		fi
 	else
-		echo "无法连接网络, 请检测网络是否正常" >> $path
+		echo "登录失败。（多次失败请重启wan口刷新ip）"
+		echo "登录失败。（多次失败请重启wan口刷新ip）" >> $path
 		return
 	fi
 }
@@ -328,27 +359,11 @@ login(){
 # 注销逻辑
 logout(){
 	echo "$time - 状态：注销中..." >> $path
-	# 1、从本地wan口自动获取ip，可以参考以下命令自行实现
-	# if [[ "$clientip" == "" ]]; then
-	# 	clientip=`ifconfig wan|grep "inet addr"|awk '{print $2}'|tr -d "addr:"`
-	#	echo "clientip:$clientip"
-	# fi
-
-	# 2、从输入的参数获取
-	if [ $1 ]; then
-		clientip=$1
-		echo "clientip:$clientip"
-	else
-		echo "用户IP为空，注销需要用户IP"
-		echo "例如: ESC-Z.sh logout xxx:xxx:xxx:xxx"
-		return
-	fi
-
+	getLocalIP
 	# 注销
-	if [ $clientip ]; then
-		echo "正在注销中..."
-		logoutTask
-	fi
+	echo "正在注销，请稍后..."
+	echo "注销IP为:${clientip}" >> $path
+	logoutTask
 	
 }
 
@@ -356,9 +371,8 @@ logout(){
 #帮助
 help(){
 	echo "===================== 帮助 ======================="
-	echo "usge: ESC-Z.sh <login|logout> [xxx:xxx:xxx:xxx]"
-	echo "注意：选择logout需要提供IP"
-	echo "在logout()修改为“从本地wan口自动获取ip”不用附带IP参数"
+	echo "usge: ESC-Z.sh <login|logout|myFunc> [param]"
+	echo "对于用户自定义函数，可以通过myFunc参数来调用"
 }
 
 
@@ -387,7 +401,7 @@ main(){
 	if [[ "$1" == "login" ]]; then
 		login
 	elif [[ "$1" == "logout" ]]; then
-		logout $2
+		logout
 	fi
 
 }
@@ -398,12 +412,15 @@ case $1 in
 	    main login
 	    ;;
   	logout)
-	    main logout $2
+	    main logout
 	    ;;
+	myFunc)
+		myFunc $2
+		;;
 	*)
 	    help
 	    ;;
 esac
 
-echo "退出中..." >> $path
+echo "退出中..."
 exit 1
